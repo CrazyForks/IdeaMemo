@@ -48,3 +48,6 @@
 
 -keep class org.zeroturnaround.zip.** { *; }
 -keep class net.lingala.zip4j.** { *; }
+
+# Ktor references java.lang.management which is not available on Android
+-dontwarn java.lang.management.**

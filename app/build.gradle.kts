@@ -1,5 +1,4 @@
-import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
-import com.android.tools.r8.internal.fa
+
 import java.util.Properties
 
 plugins {
@@ -30,8 +29,8 @@ android {
         applicationId = "com.ldlywt.note"
         minSdk = 26
         targetSdk = 35
-        versionCode = 262
-        versionName = "2.6.2"
+        versionCode = 270
+        versionName = "2.7.0"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -187,6 +186,9 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     testImplementation(libs.ktor.client.mock)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
 
     // serialization
     implementation(libs.kotlinx.serialization.json)

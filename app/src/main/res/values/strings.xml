@@ -108,7 +108,6 @@
     <string name="github">Github</string>
     <string name="card_note_maxline">Card MaxLine</string>
     <string name="delete_location">Are you sure you want to delete %1$s location info?</string>
-    <string name="donate_list">Donate List</string>
     <string name="thanks">Thanks</string>
     <string name="select_date">Select Date Range</string>
     <string name="start_time">Start Time:</string>
@@ -142,4 +141,7 @@
     <string name="language_chinese">简体中文</string>
     <string name="language_english">English</string>
     <string name="language_traditional_chinese">繁体中文</string>
+
+    <string name="lan_share">LAN Share (Http Server)</string>
+    <string name="lan_share_sub">Real-time viewing via browser</string>
 </resources>

@@ -209,6 +209,7 @@ fun DataManagerPage(
                 )
             }
         }
+
         if (webInputDialog) {
             AccountInputDialog(
                 onDismissRequest = {

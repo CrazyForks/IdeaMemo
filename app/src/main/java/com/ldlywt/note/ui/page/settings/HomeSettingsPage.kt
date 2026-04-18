@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -60,6 +61,7 @@ import com.ldlywt.note.ui.page.main.MainActivity
 import com.ldlywt.note.ui.page.router.Screen
 import com.ldlywt.note.utils.Constant
 import com.ldlywt.note.utils.DonateUtils
+import com.ldlywt.note.utils.HttpServer
 import com.ldlywt.note.utils.LanguageUtils
 import com.ldlywt.note.utils.SettingsPreferences
 import com.ldlywt.note.utils.openUrl
@@ -109,6 +111,7 @@ data class SettingsBean(val title: Int, val imageVector: ImageVector, val onClic
 @OptIn(UnstableSaltApi::class)
 @Composable
 fun SettingsPreferenceScreen(navController: NavHostController) {
+    val noteState = LocalMemosState.current
     val dataViewModel = hiltViewModel<DataManagerViewModel>()
 
     val context = LocalContext.current
@@ -123,6 +126,9 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
 
     var isLoading by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf(false) }
+
+    var isHttpServerRunning by remember { mutableStateOf(HttpServer.isRunning()) }
+    var serverIp by remember { mutableStateOf(HttpServer.getIpAddress()) }
 
     val settingList = listOf(
         SettingsBean(
@@ -283,6 +289,23 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                         },
                         text = R.string.tag_fix.str,
                         iconPainter = rememberVectorPainter(Icons.Outlined.Label),
+                    )
+
+                    ItemSwitcher(
+                        text = R.string.lan_share.str,
+                        sub = if (isHttpServerRunning) "http://$serverIp:8080" else R.string.lan_share_sub.str,
+                        state = isHttpServerRunning,
+                        iconPainter = rememberVectorPainter(Icons.Outlined.Wifi),
+                        iconColor = SaltTheme.colors.text,
+                        onChange = {
+                            if (it) {
+                                HttpServer.start(noteState.notes)
+                                serverIp = HttpServer.getIpAddress()
+                            } else {
+                                HttpServer.stop()
+                            }
+                            isHttpServerRunning = HttpServer.isRunning()
+                        }
                     )
 
                 }

@@ -102,7 +102,6 @@
     <string name="github">Github</string>
     <string name="card_note_maxline">首頁卡片最大行數</string>
     <string name="delete_location">確定要刪除 %1$s 位置資訊？</string>
-    <string name="donate_list">捐贈名單</string>
     <string name="thanks">鳴謝</string>
     <string name="collapse">收起</string>
     <string name="read_more">全文</string>
@@ -113,4 +112,6 @@
     <string name="feedback_title">意见反馈</string>
     <string name="feedback_lark">飛書問卷</string>
     <string name="xiaohongshu">小紅書</string>
+    <string name="lan_share">局域網共享 (Http Server)</string>
+    <string name="lan_share_sub">開啟後可透過瀏覽器即時查看筆記</string>
 </resources>

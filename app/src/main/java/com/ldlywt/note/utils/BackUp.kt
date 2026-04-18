@@ -160,7 +160,7 @@ object BackUp {
         }
     }
 
-    private fun generateHtml(list: List<NoteShowBean>): String {
+    fun generateHtml(list: List<NoteShowBean>): String {
         val userName = "@Lucky"
         val exportDate = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(Date())
         val count = list.size
