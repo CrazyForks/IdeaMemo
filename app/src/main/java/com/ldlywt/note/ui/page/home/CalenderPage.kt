@@ -136,9 +136,11 @@ fun CalenderPage(navController: NavHostController) {
                 items(count = filterList.size, key = { it }) { index ->
                     CardCalender(noteShowBean = filterList[index], navController)
                 }
-                item {
-                    Spacer(modifier = Modifier.height(100.dp))
-                }
+            }
+            
+            // 为悬浮导航栏留出间距
+            item {
+                Spacer(modifier = Modifier.height(120.dp))
             }
         }
     }

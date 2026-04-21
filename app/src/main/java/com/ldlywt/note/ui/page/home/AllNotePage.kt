@@ -26,14 +26,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AvTimer
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,6 +42,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -60,6 +62,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -151,13 +154,22 @@ fun AllNotesPage(
         },
         floatingActionButton = {
             if (!showInputDialog) {
-                FloatingActionButton(onClick = {
-                    hideBottomNavBar.invoke(true)
-                    parentNoteForComment = null
-                    showInputDialog = true
-                }, modifier = Modifier.padding(end = 16.dp, bottom = 32.dp)) {
+                FloatingActionButton(
+                    onClick = {
+                        hideBottomNavBar.invoke(true)
+                        parentNoteForComment = null
+                        showInputDialog = true
+                    },
+                    modifier = Modifier.padding(end = 8.dp, bottom = 100.dp), // 调整位置以适应悬浮导航栏
+                    shape = CircleShape,
+                    containerColor = SaltTheme.colors.highlight,
+                    contentColor = Color.White,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+                ) {
                     Icon(
-                        Icons.Rounded.Edit, stringResource(R.string.edit)
+                        Icons.Rounded.Add, 
+                        contentDescription = stringResource(R.string.edit),
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
@@ -181,7 +193,7 @@ fun AllNotesPage(
                             }
                         }
                         item {
-                            Spacer(modifier = Modifier.height(100.dp))
+                            Spacer(modifier = Modifier.height(160.dp))
                         }
                     }
                 } else {
@@ -204,7 +216,7 @@ fun AllNotesPage(
                             )
                         }
                         item {
-                            Spacer(modifier = Modifier.height(100.dp))
+                            Spacer(modifier = Modifier.height(160.dp))
                         }
                     }
                 }
@@ -346,27 +358,6 @@ private fun Toolbar(
     dateRangeBlock: () -> Unit,
     onSortChanged: () -> Unit
 ) {
-    IconButton(onClick = dateRangeBlock) {
-        Icon(
-            contentDescription = R.string.date_range.str,
-            imageVector = Icons.Outlined.AvTimer,
-            tint = SaltTheme.colors.text
-        )
-    }
-    IconButton(
-        onClick = {
-            navController.navigate(route = Screen.TagList) {
-                launchSingleTop = true
-            }
-        }
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Tag,
-            contentDescription = R.string.tag.str,
-            tint = SaltTheme.colors.text
-        )
-    }
-
     IconButton(
         onClick = {
             navController.navigate(route = Screen.Search) {
@@ -381,24 +372,13 @@ private fun Toolbar(
         )
     }
 
-    SortFilterMenu(
-        onSortChanged = {
-            onSortChanged()
-        }
-    )
-}
-
-@Composable
-fun SortFilterMenu(onSortChanged: () -> Unit = {}) {
     var expanded by remember { mutableStateOf(false) }
-    val sortTime by SharedPreferencesUtils.sortTime.collectAsState(SortTime.UPDATE_TIME_DESC)
-    val scope = rememberCoroutineScope()
-
+    
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
-                imageVector = Icons.Outlined.FilterList,
-                contentDescription = "sort",
+                imageVector = Icons.Outlined.MoreVert,
+                contentDescription = "more",
                 tint = SaltTheme.colors.text
             )
         }
@@ -407,52 +387,90 @@ fun SortFilterMenu(onSortChanged: () -> Unit = {}) {
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(SaltTheme.colors.popup)
         ) {
-            SortMenuItem(
-                text = stringResource(R.string.update_time_desc),
-                selected = sortTime == SortTime.UPDATE_TIME_DESC,
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Tag, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.tag), fontSize = 14.sp)
+                    }
+                },
                 onClick = {
-                    scope.launch {
-                        SharedPreferencesUtils.updateSortTime(SortTime.UPDATE_TIME_DESC)
-                        expanded = false
-                        onSortChanged()
+                    expanded = false
+                    navController.navigate(route = Screen.TagList) {
+                        launchSingleTop = true
                     }
                 }
             )
-            SortMenuItem(
-                text = stringResource(R.string.update_time_asc),
-                selected = sortTime == SortTime.UPDATE_TIME_ASC,
-                onClick = {
-                    scope.launch {
-                        SharedPreferencesUtils.updateSortTime(SortTime.UPDATE_TIME_ASC)
-                        expanded = false
-                        onSortChanged()
+            DropdownMenuItem(
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.AvTimer, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(text = stringResource(R.string.date_range), fontSize = 14.sp)
                     }
+                },
+                onClick = {
+                    expanded = false
+                    dateRangeBlock()
                 }
             )
-            SortMenuItem(
-                text = stringResource(R.string.create_time_desc),
-                selected = sortTime == SortTime.CREATE_TIME_DESC,
-                onClick = {
-                    scope.launch {
-                        SharedPreferencesUtils.updateSortTime(SortTime.CREATE_TIME_DESC)
-                        expanded = false
-                        onSortChanged()
-                    }
-                }
-            )
-            SortMenuItem(
-                text = stringResource(R.string.create_time_asc),
-                selected = sortTime == SortTime.CREATE_TIME_ASC,
-                onClick = {
-                    scope.launch {
-                        SharedPreferencesUtils.updateSortTime(SortTime.CREATE_TIME_ASC)
-                        expanded = false
-                        onSortChanged()
-                    }
-                }
-            )
+            
+            Spacer(modifier = Modifier.height(4.dp).fillMaxWidth().background(SaltTheme.colors.background.copy(alpha = 0.5f)))
+            
+            SortFilterMenuContent(onSortChanged = {
+                expanded = false
+                onSortChanged()
+            })
         }
     }
+}
+
+@Composable
+fun SortFilterMenuContent(onSortChanged: () -> Unit = {}) {
+    val sortTime by SharedPreferencesUtils.sortTime.collectAsState(SortTime.UPDATE_TIME_DESC)
+    val scope = rememberCoroutineScope()
+
+    SortMenuItem(
+        text = stringResource(R.string.update_time_desc),
+        selected = sortTime == SortTime.UPDATE_TIME_DESC,
+        onClick = {
+            scope.launch {
+                SharedPreferencesUtils.updateSortTime(SortTime.UPDATE_TIME_DESC)
+                onSortChanged()
+            }
+        }
+    )
+    SortMenuItem(
+        text = stringResource(R.string.update_time_asc),
+        selected = sortTime == SortTime.UPDATE_TIME_ASC,
+        onClick = {
+            scope.launch {
+                SharedPreferencesUtils.updateSortTime(SortTime.UPDATE_TIME_ASC)
+                onSortChanged()
+            }
+        }
+    )
+    SortMenuItem(
+        text = stringResource(R.string.create_time_desc),
+        selected = sortTime == SortTime.CREATE_TIME_DESC,
+        onClick = {
+            scope.launch {
+                SharedPreferencesUtils.updateSortTime(SortTime.CREATE_TIME_DESC)
+                onSortChanged()
+            }
+        }
+    )
+    SortMenuItem(
+        text = stringResource(R.string.create_time_asc),
+        selected = sortTime == SortTime.CREATE_TIME_ASC,
+        onClick = {
+            scope.launch {
+                SharedPreferencesUtils.updateSortTime(SortTime.CREATE_TIME_ASC)
+                onSortChanged()
+            }
+        }
+    )
 }
 
 @Composable

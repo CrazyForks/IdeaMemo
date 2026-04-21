@@ -3,19 +3,45 @@ package com.ldlywt.note.ui.page.main
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -66,23 +92,16 @@ fun MainScreen(navController: NavHostController) {
             )
         }
     } else {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SaltTheme.colors.subBackground)
+                .background(SaltTheme.colors.background)
         ) {
             MainPager(
                 pagerState = pagerState,
                 navController = navController,
                 onHideNavBar = { hideNavBar = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .run {
-                        if (!hideNavBar) {
-                            this.consumeWindowInsets(NavigationBarDefaults.windowInsets)
-                        } else this
-                    }
+                modifier = Modifier.fillMaxSize()
             )
             if (!hideNavBar) {
                 AdaptiveNavigationBar(
@@ -92,7 +111,8 @@ fun MainScreen(navController: NavHostController) {
                         currentDestination = destinations[index].route
                         scope.launch { pagerState.scrollToPage(index) }
                     },
-                    isWideScreen = false
+                    isWideScreen = false,
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
         }
@@ -132,44 +152,20 @@ private fun AdaptiveNavigationBar(
     if (isWideScreen) {
         NavigationRail(modifier, containerColor = SaltTheme.colors.subBackground) {
             destinations.forEachIndexed { index, destination ->
+                val selected = destination.route == currentDestination
                 NavigationRailItem(
-                    selected = destination.route == currentDestination,
-                    onClick = {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                        onNavigateToDestination(index)
-                    },
-                    icon = destination.icon,
-                )
-            }
-        }
-    } else {
-        val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        // 判断是否为虚拟导航栏（通常高度 > 0）
-        val isSystemBarVisible = navigationBarHeight > 0.dp
-        
-        NavigationBar(
-            modifier = modifier.height(if (isSystemBarVisible) 80.dp else 64.dp),
-            containerColor = SaltTheme.colors.subBackground,
-            windowInsets = WindowInsets.navigationBars
-        ) {
-            destinations.forEachIndexed { index, destination ->
-                NavigationBarItem(
-                    selected = destination.route == currentDestination,
+                    selected = selected,
                     onClick = {
                         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                         onNavigateToDestination(index)
                     },
                     icon = {
-                        // 如果是手势导航（全面屏），增加一些间距，
-                        // 虚拟导航栏则依靠 NavigationBar 默认的居中逻辑
-                        val iconModifier = if (!isSystemBarVisible) Modifier.padding(top = 8.dp) else Modifier
-                        Box(modifier = iconModifier) {
-                            destination.icon()
-                        }
+                        Icon(
+                            imageVector = if (selected) destination.selectedIcon else destination.unselectedIcon,
+                            contentDescription = null
+                        )
                     },
-                    label = null,
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemDefaults.colors(
+                    colors = NavigationRailItemDefaults.colors(
                         selectedIconColor = SaltTheme.colors.highlight,
                         unselectedIconColor = SaltTheme.colors.text.copy(alpha = 0.6f),
                         indicatorColor = Color.Transparent
@@ -177,23 +173,65 @@ private fun AdaptiveNavigationBar(
                 )
             }
         }
+    } else {
+        Surface(
+            modifier = modifier
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .navigationBarsPadding()
+                .fillMaxWidth()
+                .height(64.dp),
+            shape = RoundedCornerShape(32.dp),
+            color = SaltTheme.colors.subBackground.copy(alpha = 0.95f),
+            tonalElevation = 8.dp,
+            shadowElevation = 8.dp
+        ) {
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                destinations.forEachIndexed { index, destination ->
+                    val selected = destination.route == currentDestination
+                    IconButton(
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            onNavigateToDestination(index)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        val tint = if (selected) SaltTheme.colors.highlight else SaltTheme.colors.text.copy(alpha = 0.45f)
+                        val icon = if (selected) destination.selectedIcon else destination.unselectedIcon
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 enum class NavigationBarPath(
     val route: String,
-    val icon: @Composable () -> Unit,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
 ) {
     AllNote(
         route = "Home",
-        icon = { Icon(Icons.Default.Home, contentDescription = null) }
+        selectedIcon = Icons.Rounded.Home,
+        unselectedIcon = Icons.Outlined.Home
     ),
     Calendar(
         route = "Calendar",
-        icon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) }
+        selectedIcon = Icons.Rounded.Event,
+        unselectedIcon = Icons.Outlined.Event
     ),
     Settings(
         route = "Settings",
-        icon = { Icon(Icons.Default.Settings, contentDescription = null) }
+        selectedIcon = Icons.Rounded.Person,
+        unselectedIcon = Icons.Outlined.Person
     )
 }
