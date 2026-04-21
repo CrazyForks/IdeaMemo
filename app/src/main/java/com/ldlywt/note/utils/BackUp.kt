@@ -3,7 +3,6 @@ package com.ldlywt.note.utils
 import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.provider.OpenableColumns
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.documentfile.provider.DocumentFile
@@ -13,16 +12,12 @@ import com.ldlywt.note.bean.Attachment
 import com.ldlywt.note.bean.Note
 import com.ldlywt.note.bean.NoteShowBean
 import com.ldlywt.note.bean.Tag
-import com.ldlywt.note.db.repo.TagNoteRepo
 import dagger.hilt.android.EntryPointAccessors
 import dalvik.system.ZipPathValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.zeroturnaround.zip.ZipUtil
-import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.BufferedWriter
 import java.io.File
@@ -33,17 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
-import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
-import javax.crypto.spec.SecretKeySpec
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
-
-data class ExportItem(val dir: String, val file: File)
 
 object BackUp {
     suspend fun exportTXTFile(list: List<NoteShowBean>, uri: Uri) = withContext(Dispatchers.IO) {

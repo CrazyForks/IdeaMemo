@@ -114,4 +114,6 @@
     <string name="xiaohongshu">小紅書</string>
     <string name="lan_share">局域網共享 (Http Server)</string>
     <string name="lan_share_sub">開啟後可透過瀏覽器即時查看筆記</string>
+    <string name="home_title_one">列表</string>
+    <string name="home_title_two">瀑布</string>
 </resources>

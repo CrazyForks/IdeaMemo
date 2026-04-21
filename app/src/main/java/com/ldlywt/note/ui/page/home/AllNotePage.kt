@@ -132,12 +132,12 @@ fun AllNotesPage(
             ) {
                 HomeTabTitle(
                     selected = !isGalleryMode,
-                    text = "Notes",
+                    text = stringResource(R.string.home_title_one),
                     onClick = { isGalleryMode = false }
                 )
                 HomeTabTitle(
                     selected = isGalleryMode,
-                    text = "Gallery",
+                    text = stringResource(R.string.home_title_two),
                     onClick = { isGalleryMode = true }
                 )
             }

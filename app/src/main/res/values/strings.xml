@@ -144,4 +144,6 @@
 
     <string name="lan_share">LAN Share (Http Server)</string>
     <string name="lan_share_sub">Real-time viewing via browser</string>
+    <string name="home_title_one">Notes</string>
+    <string name="home_title_two">Gallery</string>
 </resources>

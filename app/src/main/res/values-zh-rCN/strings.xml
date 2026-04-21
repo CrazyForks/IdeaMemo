@@ -142,4 +142,6 @@
 
     <string name="lan_share">局域网共享 (Http Server)</string>
     <string name="lan_share_sub">开启后可通过浏览器实时查看笔记</string>
+    <string name="home_title_one">列表</string>
+    <string name="home_title_two">瀑布</string>
 </resources>

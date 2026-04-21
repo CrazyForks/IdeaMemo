@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContract
 
 
@@ -35,7 +34,7 @@ object ExportHtmlContract : ActivityResultContract<None?, Uri?>() {
         return Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "application/zip"
-            putExtra(Intent.EXTRA_TITLE, "IdeaMemoHtml.zip")
+            putExtra(Intent.EXTRA_TITLE, backUpFileName)
         }
     }
 
