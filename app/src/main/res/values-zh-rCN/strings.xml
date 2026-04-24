@@ -31,12 +31,13 @@
     <string name="json_export">Json 导出</string>
     <string name="txt_export">Txt 导出</string>
     <string name="mk_export">MarkDown 导出</string>
-    <string name="html_export">导出(可电脑上使用网页打开)</string>
-    <string name="html_import">导入(支持Flomo)</string>
+    <string name="html_export">本地导出(可电脑上使用网页打开)</string>
+    <string name="html_import">本地导入(支持Flomo)</string>
     <string name="webdav_backup">备份</string>
     <string name="webdav_restore">还原</string>
     <string name="tag_fix">标签修正</string>
     <string name="tag">标签</string>
+    <string name="all_tag">所有标签</string>
     <string name="tag_List">标签管理</string>
     <string name="day">日</string>
     <string name="title_local_auto_backup">本地自动备份</string>
@@ -144,4 +145,5 @@
     <string name="lan_share_sub">开启后可通过浏览器实时查看笔记</string>
     <string name="home_title_one">列表</string>
     <string name="home_title_two">瀑布</string>
+    <string name="picture">图片</string>
 </resources>

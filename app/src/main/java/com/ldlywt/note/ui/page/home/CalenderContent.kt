@@ -8,10 +8,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,15 +22,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
+import com.ldlywt.note.ui.page.LocalMemosViewModel
 import com.moriafly.salt.ui.SaltTheme
+import java.io.File
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.Month
@@ -42,6 +48,7 @@ fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 8.dp)
             .testTag("MonthHeader"),
     ) {
         for (dayOfWeek in daysOfWeek) {
@@ -50,7 +57,7 @@ fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp,
                 lineHeight = 16.sp,
-                color = SaltTheme.colors.text,
+                color = SaltTheme.colors.subText,
                 text = dayOfWeek.displayText(),
                 fontWeight = FontWeight.Medium,
             )
@@ -60,53 +67,76 @@ fun MonthHeader(daysOfWeek: List<DayOfWeek>) {
 
 @Composable
 fun Day(day: CalendarDay, today: LocalDate, hasScheme: Boolean, isSelected: Boolean, onClick: (CalendarDay) -> Unit) {
+    val noteViewModel = LocalMemosViewModel.current
+    val firstImagePath = noteViewModel.dateFirstImageMap[day.date]
+
     val backgroundColor = if (day.date == today) {
-        MaterialTheme.colorScheme.primaryContainer
+        SaltTheme.colors.highlight.copy(alpha = 0.1f)
     } else {
-        if (isSelected) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent
+        if (isSelected) SaltTheme.colors.subBackground else Color.Transparent
     }
+
     Box(
         modifier = Modifier
-            .aspectRatio(1.2f) // This is important for square-sizing!
+            .aspectRatio(1f)
             .testTag("MonthDay")
             .padding(2.dp)
-            .clip(CircleShape)
-            .background(
-                color = backgroundColor
-            )
-            // Disable clicks on inDates/outDates
+            .clip(RoundedCornerShape(8.dp))
+            .background(color = backgroundColor)
             .clickable(
-//                enabled = day.position == DayPosition.MonthDate,
-                showRipple = !hasScheme,
+                showRipple = true,
                 onClick = { onClick(day) },
             ),
     ) {
+        if (firstImagePath != null) {
+            AsyncImage(
+                model = File(firstImagePath),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(2.dp))
+                    .graphicsLayer(alpha = 0.9f)
+            )
+        }
+
         var textColor = when (day.position) {
-            // Color.Unspecified will use the default text color from the current theme
-            DayPosition.MonthDate -> SaltTheme.colors.text
-            DayPosition.InDate, DayPosition.OutDate -> Color.Gray
+            DayPosition.MonthDate -> if (firstImagePath != null) Color.White else SaltTheme.colors.text
+            DayPosition.InDate, DayPosition.OutDate -> SaltTheme.colors.subText.copy(alpha = 0.5f)
         }
-        if (day.date == today) {
-            textColor = Color.White
+
+        if (day.date == today && firstImagePath == null) {
+            textColor = SaltTheme.colors.highlight
         }
+
         Text(
             modifier = Modifier.align(Alignment.Center),
             text = day.date.dayOfMonth.toString(),
             color = textColor,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
+            fontWeight = if (day.date == today || isSelected) FontWeight.Bold else FontWeight.Medium,
+            fontSize = 14.sp,
+            style = if (firstImagePath != null) {
+                MaterialTheme.typography.bodyMedium.copy(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        blurRadius = 4f
+                    )
+                )
+            } else {
+                MaterialTheme.typography.bodyMedium
+            }
         )
-        if (hasScheme) {
+
+        if (hasScheme && firstImagePath == null) {
             Canvas(
                 modifier = Modifier
                     .size(4.dp)
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp)
+                    .padding(bottom = 6.dp)
             ) {
-                val radius = size.width / 2f
                 drawCircle(
                     color = Color.Gray,
-                    radius = radius
+                    radius = size.width / 2
                 )
             }
         }

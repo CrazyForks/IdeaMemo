@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Explore
@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastSumBy
@@ -97,10 +98,10 @@ fun SettingsPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 12.dp),
-                style = SaltTheme.textStyles.main.copy(fontSize = 24.sp)
+                style = SaltTheme.textStyles.main.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold)
             )
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         SettingsPreferenceScreen(navController)
     }
 }
@@ -151,16 +152,15 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
     )
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        // 固定两列
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         content = {
-            item(content = {
+            item {
                 HeatContent()
-            })
+            }
 
-            item(content = {
+            item {
                 SettingsHeadLayout()
-            })
+            }
 
             item {
                 RoundedColumn {
@@ -238,7 +238,7 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                                     languagePopupMenuState.dismiss()
                                 },
                                 selected = currentLocale.language == locale.language &&
-                                           (if (locale.language == "zh") currentLocale.country == locale.country else true),
+                                        (if (locale.language == "zh") currentLocale.country == locale.country else true),
                                 text = name,
                                 iconColor = SaltTheme.colors.text
                             )
@@ -346,12 +346,12 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                     )
                 }
             }
+            
+            item {
+                Spacer(modifier = Modifier.height(120.dp))
+            }
         })
 
-//    if (showWarnDialog) {
-//        TipsDialog(block = { showWarnDialog = false })
-//    }
-    // Show feedback dialog when feedbackDialogVisible is true
     if (downloadDialogVisible) {
         DownloadsDialog {
             downloadDialogVisible = false
@@ -362,51 +362,53 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
 @Composable
 fun SettingsHeadLayout() {
     val noteState = LocalMemosState.current
-    val memos by lazy(noteState::notes)
+    val memos = noteState.notes
     val tagList = LocalTags.current
 
-    Row {
-        val modifier = Modifier.weight(1f)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(SaltTheme.colors.subBackground, RoundedCornerShape(16.dp))
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val daysCount = memos.map { it.note.createTime.toYYMMDD() }.toSet().size
+        val notesCount = memos.size
+        val charactersCount = memos.fastSumBy { it.note.noteTitle?.length ?: 0 + it.note.content.length }
+        val mediaCount = memos.fastSumBy { it.note.attachments.size }
 
-        boxText(
-            modifier, memos.size.toString(), R.string.all_note.str
-        )
-        boxText(
-            modifier,
-            memos.fastSumBy { it.note.noteTitle?.length ?: (0 + it.note.content.length) }
-                .toString(),
-            R.string.characters.str
-        )
-        boxText(
-            modifier,
-            memos.map { it.note.createTime.toYYMMDD() }.toSet().size.toString(),
-            R.string.dyas.str
-        )
-
-        boxText(
-            modifier, tagList.size.toString(), R.string.tag.str
-        )
+        StatItem(R.string.dyas.str, daysCount.toString(), Modifier.weight(1f))
+        StatItem(R.string.all_note.str, notesCount.toString(), Modifier.weight(1f))
+        StatItem(R.string.characters.str, charactersCount.toString(), Modifier.weight(1f))
+        StatItem(R.string.picture.str, mediaCount.toString(), Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun boxText(modifier: Modifier, title: String, desc: String) {
-
+private fun StatItem(label: String, value: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.wrapContentWidth(Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = title,
-            style = SaltTheme.textStyles.main,
+            text = label,
+            style = SaltTheme.textStyles.sub.copy(
+                fontSize = 12.sp,
+                color = SaltTheme.colors.subText,
+                fontWeight = FontWeight.Normal
+            )
         )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = desc,
-            style = SaltTheme.textStyles.sub,
+            text = value,
+            style = SaltTheme.textStyles.main.copy(
+                fontSize = 18.sp,
+                color = SaltTheme.colors.text,
+                fontWeight = FontWeight.Bold
+            )
         )
     }
 }

@@ -17,6 +17,8 @@ import dalvik.system.ZipPathValidator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
+import org.jsoup.nodes.TextNode
 import org.zeroturnaround.zip.ZipUtil
 import java.io.BufferedOutputStream
 import java.io.BufferedWriter
@@ -399,8 +401,20 @@ object BackUp {
                         val tagsAttr = memoElement.attr("data-tags")
 
                         val timeStr = timeElement?.text() ?: ""
-                        val contentHtml = contentElement?.html() ?: ""
-                        val contentText = Jsoup.parse(contentHtml).text()
+                        
+                        // 处理内容中的换行：
+                        // 导出时是用 <p> 标签包裹每一行，所以还原时需要将 <p> 标签转换回换行符
+                        val contentText = contentElement?.let { element ->
+                            val sb = StringBuilder()
+                            element.children().forEach { child ->
+                                if (child.tagName() == "p") {
+                                    if (sb.isNotEmpty()) sb.append("\n")
+                                    sb.append(child.text())
+                                }
+                            }
+                            // 如果没有 p 标签，则回退到普通文本处理
+                            if (sb.isEmpty()) element.text() else sb.toString()
+                        } ?: ""
 
                         val createTime = try {
                             dateFormat.parse(timeStr)?.time ?: System.currentTimeMillis()

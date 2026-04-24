@@ -37,6 +37,7 @@
     <string name="webdav_restore">Restore</string>
     <string name="tag_fix">Fix Tag</string>
     <string name="tag">Tag</string>
+    <string name="all_tag">All Tag</string>
     <string name="tag_List">Tag List</string>
     <string name="day">th</string>
     <string name="cloud_data_manager">WebDav</string>
@@ -146,4 +147,5 @@
     <string name="lan_share_sub">Real-time viewing via browser</string>
     <string name="home_title_one">Notes</string>
     <string name="home_title_two">Gallery</string>
+    <string name="picture">Picture</string>
 </resources>

@@ -73,17 +73,36 @@ class NoteViewModel @Inject constructor(private val tagNoteRepo: TagNoteRepo) : 
     var levelMemosMap = mutableStateMapOf<LocalDate, Level>()
         private set
 
+    var dateFirstImageMap = mutableStateMapOf<LocalDate, String?>()
+        private set
+
     private suspend fun getLocalDateMap(notes: List<NoteShowBean>) = withContext(Dispatchers.IO) {
         val sortTime = SharedPreferencesUtils.sortTime.first()
-        val map: MutableMap<LocalDate, Int> = mutableMapOf()
-        notes.forEach {
-            val showTime =
-                if (sortTime == SortTime.UPDATE_TIME_DESC || sortTime == SortTime.UPDATE_TIME_ASC) it.note.updateTime else it.note.createTime
+        val countMap: MutableMap<LocalDate, Int> = mutableMapOf()
+        val imageMap: MutableMap<LocalDate, String?> = mutableMapOf()
+        
+        notes.forEach { noteShow ->
+            val showTime = if (sortTime == SortTime.UPDATE_TIME_DESC || sortTime == SortTime.UPDATE_TIME_ASC) 
+                noteShow.note.updateTime else noteShow.note.createTime
             val localDate = Instant.ofEpochMilli(showTime).atZone(ZoneId.systemDefault()).toLocalDate()
-            map[localDate] = map.getOrElse(localDate) { 0 } + 1
+            
+            countMap[localDate] = countMap.getOrElse(localDate) { 0 } + 1
+            
+            // 如果当天还没记录图片，且当前笔记有图片，记录第一张
+            if (!imageMap.containsKey(localDate)) {
+                val firstImage = noteShow.note.attachments.firstOrNull { it.path.isNotBlank() }
+                if (firstImage != null) {
+                    imageMap[localDate] = firstImage.path
+                }
+            }
         }
-        levelMemosMap.clear()
-        levelMemosMap.putAll(convertToLevelMap(map))
+        
+        withContext(Dispatchers.Main) {
+            levelMemosMap.clear()
+            levelMemosMap.putAll(convertToLevelMap(countMap))
+            dateFirstImageMap.clear()
+            dateFirstImageMap.putAll(imageMap)
+        }
     }
 
     private fun convertToLevelMap(inputMap: Map<LocalDate, Int>): Map<LocalDate, Level> {

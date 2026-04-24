@@ -34,6 +34,7 @@
     <string name="webdav_restore">還原</string>
     <string name="tag_fix">標籤修正</string>
     <string name="tag">標籤</string>
+    <string name="all_tag">所有標籤</string>
     <string name="tag_List">標籤管理</string>
     <string name="day">日</string>
     <string name="cloud_data_manager">雲端備份</string>
@@ -116,4 +117,5 @@
     <string name="lan_share_sub">開啟後可透過瀏覽器即時查看筆記</string>
     <string name="home_title_one">列表</string>
     <string name="home_title_two">瀑布</string>
+    <string name="picture">圖片</string>
 </resources>

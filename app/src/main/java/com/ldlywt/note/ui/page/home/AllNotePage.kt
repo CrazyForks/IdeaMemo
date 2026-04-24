@@ -167,7 +167,7 @@ fun AllNotesPage(
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.Add, 
+                        Icons.Rounded.Add,
                         contentDescription = stringResource(R.string.edit),
                         modifier = Modifier.size(28.dp)
                     )
@@ -233,7 +233,7 @@ fun AllNotesPage(
                     isShow = showInputDialog,
                     parentNote = parentNoteForComment,
                     modifier =
-                    Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+                        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
                 ) {
                     hideBottomNavBar.invoke(false)
                     showInputDialog = false
@@ -373,7 +373,7 @@ private fun Toolbar(
     }
 
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(
@@ -390,9 +390,9 @@ private fun Toolbar(
             DropdownMenuItem(
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Tag, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.Tag, contentDescription = null, modifier = Modifier.size(18.dp), tint = SaltTheme.colors.text)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.tag), fontSize = 14.sp)
+                        Text(text = stringResource(R.string.all_tag), fontSize = 14.sp, color = SaltTheme.colors.text)
                     }
                 },
                 onClick = {
@@ -405,9 +405,9 @@ private fun Toolbar(
             DropdownMenuItem(
                 text = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.AvTimer, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.AvTimer, contentDescription = null, modifier = Modifier.size(18.dp), tint = SaltTheme.colors.text)
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.date_range), fontSize = 14.sp)
+                        Text(text = stringResource(R.string.date_range), fontSize = 14.sp, color = SaltTheme.colors.text)
                     }
                 },
                 onClick = {
@@ -415,9 +415,14 @@ private fun Toolbar(
                     dateRangeBlock()
                 }
             )
-            
-            Spacer(modifier = Modifier.height(4.dp).fillMaxWidth().background(SaltTheme.colors.background.copy(alpha = 0.5f)))
-            
+
+            Spacer(
+                modifier = Modifier
+                    .height(4.dp)
+                    .fillMaxWidth()
+                    .background(SaltTheme.colors.background.copy(alpha = 0.5f))
+            )
+
             SortFilterMenuContent(onSortChanged = {
                 expanded = false
                 onSortChanged()
@@ -505,11 +510,11 @@ fun ModernDateRangePicker(
     onConfirm: (Long, Long) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     val currentYear = LocalDate.now().year
     val years = remember { (currentYear - 10..currentYear + 10).toList() }
     val months = remember { (1..12).toList() }
-    
+
     var startYear by remember { mutableIntStateOf(LocalDate.now().year) }
     var startMonth by remember { mutableIntStateOf(LocalDate.now().monthValue) }
     var startDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }
@@ -673,7 +678,7 @@ fun <T> WheelPicker(
     val lazyListState = rememberLazyListState(
         initialFirstVisibleItemIndex = items.indexOf(initialItem).coerceAtLeast(0)
     )
-    
+
     val coroutineScope = rememberCoroutineScope()
 
     // 自动吸附到中心
