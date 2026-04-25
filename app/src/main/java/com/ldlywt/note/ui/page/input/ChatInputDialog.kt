@@ -229,7 +229,6 @@ fun ChatInputDialog(
         Box(
             contentAlignment = Alignment.BottomCenter, modifier = Modifier
                 .fillMaxSize()
-//                .background(Color.Black.copy(alpha = 0.5f))
                 .clickable(showRipple = false) {
                     dismiss()
                 }
@@ -238,6 +237,8 @@ fun ChatInputDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = SaltTheme.colors.background)
+                    .imePadding() // 将此移动到父容器中，使其在键盘弹出时整体上移，不再产生多余空白
+                    .padding(bottom = 16.dp) // 基础内边距
             ) {
                 if (parentNote != null) {
                     Box(
@@ -286,11 +287,11 @@ fun ChatInputDialog(
                         }
                     },
                     modifier =
-                        modifier
+                        Modifier
+                            .padding(horizontal = 16.dp) // 增加水平边距
                             .focusRequester(focusRequester)
                             .fillMaxWidth()
-                            .heightIn(max = 280.dp)
-                            .clickable { },
+                            .heightIn(max = 280.dp),
                     keyboardOptions = keyboardOptions,
                     label = { Text(R.string.any_thoughts.str) },
                 )
@@ -299,7 +300,8 @@ fun ChatInputDialog(
                     LazyRow(
                         modifier = Modifier
                             .height(80.dp)
-                            .padding(start = 15.dp, end = 15.dp, bottom = 15.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(horizontal = 15.dp, vertical = 10.dp), 
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(memoInputViewModel.uploadAttachments.toList()) { resource ->
                             InputImage(attachment = resource, true, delete = { pat ->
@@ -313,36 +315,37 @@ fun ChatInputDialog(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .imePadding()
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TagButton(tagList)
-                    PIconButton(
-                        imageVector = Icons.Outlined.Image,
-                        contentDescription = stringResource(R.string.add_image),
-                    ) {
-                        pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    }
-                    PIconButton(
-                        imageVector = Icons.Outlined.PhotoCamera,
-                        contentDescription = stringResource(R.string.take_photo),
-                    ) {
-                        try {
-                            val imagesFolder = File(context.cacheDir, "capture_picture")
-                            if (!imagesFolder.exists()) {
-                                imagesFolder.mkdirs()
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TagButton(tagList)
+                        PIconButton(
+                            imageVector = Icons.Outlined.Image,
+                            contentDescription = stringResource(R.string.add_image),
+                        ) {
+                            pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        }
+                        PIconButton(
+                            imageVector = Icons.Outlined.PhotoCamera,
+                            contentDescription = stringResource(R.string.take_photo),
+                        ) {
+                            try {
+                                val imagesFolder = File(context.cacheDir, "capture_picture")
+                                if (!imagesFolder.exists()) {
+                                    imagesFolder.mkdirs()
+                                }
+                                val file = File.createTempFile("capture_picture_", ".jpg", imagesFolder)
+                                val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", file)
+                                photoImageUri = uri
+                                takePhoto.launch(uri)
+                            } catch (e: ActivityNotFoundException) {
+                                toast(e.localizedMessage ?: "Unable to take picture.")
                             }
-                            val file = File.createTempFile("capture_picture_", ".jpg", imagesFolder)
-                            val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", file)
-                            photoImageUri = uri
-                            takePhoto.launch(uri)
-                        } catch (e: ActivityNotFoundException) {
-                            toast(e.localizedMessage ?: "Unable to take picture.")
                         }
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
                     PIconButton(
                         imageVector = Icons.Outlined.Send,
                         contentDescription = stringResource(R.string.send),
@@ -350,8 +353,6 @@ fun ChatInputDialog(
                         submit()
                     }
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }

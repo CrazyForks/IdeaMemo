@@ -114,7 +114,7 @@
     <string name="start_time">Start Time:</string>
     <string name="input_correct_date">Please enter a valid date (YYYYMMDD)</string>
     <string name="date_not_correct">Date format is incorrect, should be 8 digits</string>
-    <string name="end_date">End Time:</string>
+    <string name="end_date">结束时间:</string>
     <string name="date_range">Date Range</string>
     <string name="collapse">Collapse</string>
     <string name="read_more">Read more</string>
@@ -148,4 +148,29 @@
     <string name="home_title_one">Notes</string>
     <string name="home_title_two">Gallery</string>
     <string name="picture">Picture</string>
+    <string name="statistics">Statistics</string>
+
+    <string name="stats_recorded_days">Recorded %1$s days of time</string>
+    <string name="stats_started_on">Started on %1$s</string>
+    <string name="stats_poetic_content">Time flies. Every record is a footprint of growth, hiding the laughter and contemplation of that moment.\n\nMay you keep writing persistently, capturing every bit of light in the long river of time, living up to the years and recording the beauty.</string>
+    <string name="stats_yearly_analysis">%1$d Yearly Analysis</string>
+    <string name="stats_active_days">Active Days</string>
+    <string name="stats_total_records">Total Records</string>
+    <string name="stats_max_day_records">Max Daily Records</string>
+    <string name="stats_records_unit">%1$d Notes</string>
+    <string name="stats_chars_unit">%1$d Characters</string>
+    <string name="stats_note_length_extreme">Note Length Extremes</string>
+    <string name="stats_max_min_length">Max %1$d / Min %2$d</string>
+    <string name="stats_busiest_month">Most Productive Month</string>
+    <string name="stats_busiest_day">Record-breaking Day</string>
+    <string name="stats_latest_note">Stay up late record</string>
+    <string name="stats_work_rest_preference">Work-rest Preference</string>
+    <string name="stats_morning_type">Morning Person</string>
+    <string name="stats_afternoon_type">Afternoon Type</string>
+    <string name="stats_night_type">Night Owl</string>
+    <string name="stats_monthly_summary">%1$d Monthly Summary</string>
+    <string name="stats_this_month_records">This Month</string>
+    <string name="stats_written_chars">Characters Written</string>
+    <string name="stats_most_active_day">Most Active Day</string>
+    <string name="stats_recent_7_days">Recent 7 Days Activity</string>
 </resources>

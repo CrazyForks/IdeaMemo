@@ -26,14 +26,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AvTimer
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Tag
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
@@ -41,8 +39,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -62,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -98,13 +93,14 @@ import java.time.ZoneId
 @Composable
 fun AllNotesPage(
     navController: NavHostController,
-    hideBottomNavBar: ((Boolean) -> Unit)
+    hideBottomNavBar: ((Boolean) -> Unit),
+    externalShowInputDialog: Boolean = false,
+    onExternalShowInputDialogChange: (Boolean) -> Unit = {}
 ) {
     val noteState: NoteState = LocalMemosState.current
     var showWarnDialog by rememberSaveable { mutableStateOf(false) }
-    var showInputDialog by rememberSaveable { mutableStateOf(false) }
-    var showDateRangePicker by rememberSaveable { mutableStateOf(false) }
     var parentNoteForComment by rememberSaveable { mutableStateOf<NoteShowBean?>(null) }
+    var showDateRangePicker by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -152,28 +148,6 @@ fun AllNotesPage(
                 scrollToTop(coroutineScope, listState)
             })
         },
-        floatingActionButton = {
-            if (!showInputDialog) {
-                FloatingActionButton(
-                    onClick = {
-                        hideBottomNavBar.invoke(true)
-                        parentNoteForComment = null
-                        showInputDialog = true
-                    },
-                    modifier = Modifier.padding(end = 8.dp, bottom = 100.dp), // 调整位置以适应悬浮导航栏
-                    shape = CircleShape,
-                    containerColor = SaltTheme.colors.highlight,
-                    contentColor = Color.White,
-                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.Add,
-                        contentDescription = stringResource(R.string.edit),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
-        },
         content = {
 
             Box {
@@ -210,8 +184,7 @@ fun AllNotesPage(
                                 navHostController = navController,
                                 onCommentClick = {
                                     parentNoteForComment = it
-                                    hideBottomNavBar.invoke(true)
-                                    showInputDialog = true
+                                    onExternalShowInputDialogChange(true)
                                 }
                             )
                         }
@@ -221,22 +194,20 @@ fun AllNotesPage(
                     }
                 }
 
-                if (showInputDialog) {
+                if (externalShowInputDialog) {
                     BackHandler(enabled = true) {
-                        hideBottomNavBar.invoke(false)
-                        showInputDialog = false
+                        onExternalShowInputDialogChange(false)
                         parentNoteForComment = null
                     }
                 }
 
                 ChatInputDialog(
-                    isShow = showInputDialog,
+                    isShow = externalShowInputDialog,
                     parentNote = parentNoteForComment,
                     modifier =
-                        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+                        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 100.dp),
                 ) {
-                    hideBottomNavBar.invoke(false)
-                    showInputDialog = false
+                    onExternalShowInputDialogChange(false)
                     parentNoteForComment = null
                     scrollToTop(coroutineScope, listState)
                 }

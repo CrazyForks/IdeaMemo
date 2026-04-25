@@ -146,4 +146,29 @@
     <string name="home_title_one">列表</string>
     <string name="home_title_two">瀑布</string>
     <string name="picture">图片</string>
+    <string name="statistics">统计分析</string>
+
+    <string name="stats_recorded_days">已记录 %1$s 天的时光</string>
+    <string name="stats_started_on">始于 %1$s</string>
+    <string name="stats_poetic_content">时光飞逝。每一条记录都是成长的印记，藏着当时的欢笑与沉思。\n\n愿笔耕不辍，在岁月的长河里，用文字捕捉每一寸微光，不负时光，记录美好。</string>
+    <string name="stats_yearly_analysis">%1$d 年度分析</string>
+    <string name="stats_active_days">活跃天数</string>
+    <string name="stats_total_records">累计记录</string>
+    <string name="stats_max_day_records">单日最多记录</string>
+    <string name="stats_records_unit">%1$d 条笔记</string>
+    <string name="stats_chars_unit">%1$d 字</string>
+    <string name="stats_note_length_extreme">笔记长度最值</string>
+    <string name="stats_max_min_length">最长 %1$d 字 / 最短 %2$d 字</string>
+    <string name="stats_busiest_month">最高产月份</string>
+    <string name="stats_busiest_day">记录最多的一天</string>
+    <string name="stats_latest_note">熬夜修仙记录</string>
+    <string name="stats_work_rest_preference">作息偏好</string>
+    <string name="stats_morning_type">晨曦派</string>
+    <string name="stats_afternoon_type">午后党</string>
+    <string name="stats_night_type">深夜党</string>
+    <string name="stats_monthly_summary">%1$d月 月度小结</string>
+    <string name="stats_this_month_records">本月记录</string>
+    <string name="stats_written_chars">写下字数</string>
+    <string name="stats_most_active_day">最活跃的一天</string>
+    <string name="stats_recent_7_days">最近 7 天活跃度</string>
 </resources>

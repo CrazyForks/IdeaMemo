@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Fingerprint
@@ -265,6 +266,13 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                         },
                         text = R.string.local_data_manager.str,
                         iconPainter = rememberVectorPainter(ImageVector.vectorResource(R.drawable.ic_database))
+                    )
+                    Item(
+                        onClick = {
+                            navController.navigate(Screen.Statistics)
+                        },
+                        text = R.string.statistics.str,
+                        iconPainter = rememberVectorPainter(Icons.Outlined.BarChart)
                     )
 
                     settingList.forEachIndexed { index, it ->

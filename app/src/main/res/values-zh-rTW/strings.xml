@@ -48,8 +48,8 @@
     <string name="no_mail_app_tips">沒有郵件應用</string>
     <string name="notes_will_be">每天將備份到你手機的內部存儲中。\n\n如果你啟用了節電模式，此功能可能無法正常工作。</string>
     <string name="choose_folder">選擇資料夾</string>
-    <string name="dyas">天數</string>
-    <string name="characters">字數</string>
+    <string name="dyas">天数</string>
+    <string name="characters">字数</string>
     <string name="gallery">相冊瀏覽</string>
     <string name="random_walk">隨機漫步</string>
     <string name="tos_tips">在此之前，請閱讀並同意服務條款與隱私政策。</string>
@@ -118,4 +118,29 @@
     <string name="home_title_one">列表</string>
     <string name="home_title_two">瀑布</string>
     <string name="picture">圖片</string>
+    <string name="statistics">統計分析</string>
+
+    <string name="stats_recorded_days">已記錄 %1$s 天的時光</string>
+    <string name="stats_started_on">始於 %1$s</string>
+    <string name="stats_poetic_content">時光飛逝。每一條記錄都是成長的印記，藏著當時的歡笑與沈思。\n\n願筆耕不輟，在歲月的長河裡，用文字捕捉每一寸微光，不負時光，記錄美好。</string>
+    <string name="stats_yearly_analysis">%1$d 年度分析</string>
+    <string name="stats_active_days">活躍天數</string>
+    <string name="stats_total_records">累計記錄</string>
+    <string name="stats_max_day_records">單日最多記錄</string>
+    <string name="stats_records_unit">%1$d 條筆記</string>
+    <string name="stats_chars_unit">%1$d 字</string>
+    <string name="stats_note_length_extreme">筆記長度最值</string>
+    <string name="stats_max_min_length">最長 %1$d 字 / 最短 %2$d 字</string>
+    <string name="stats_busiest_month">最高產月份</string>
+    <string name="stats_busiest_day">記錄最多的一天</string>
+    <string name="stats_latest_note">熬夜修仙記錄</string>
+    <string name="stats_work_rest_preference">作息偏好</string>
+    <string name="stats_morning_type">晨曦派</string>
+    <string name="stats_afternoon_type">午後黨</string>
+    <string name="stats_night_type">深夜黨</string>
+    <string name="stats_monthly_summary">%1$d月 月度小結</string>
+    <string name="stats_this_month_records">本月記錄</string>
+    <string name="stats_written_chars">寫下字數</string>
+    <string name="stats_most_active_day">最活躍的一天</string>
+    <string name="stats_recent_7_days">最近 7 天活躍度</string>
 </resources>

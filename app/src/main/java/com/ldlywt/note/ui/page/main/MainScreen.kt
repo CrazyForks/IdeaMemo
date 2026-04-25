@@ -19,14 +19,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Person
@@ -71,6 +74,8 @@ fun MainScreen(navController: NavHostController) {
     val context = LocalContext.current
     var hideNavBar by rememberSaveable { mutableStateOf(false) }
     val isWideScreen = remember(configuration.orientation) { isWideScreen(context) }
+    
+    var showInputDialog by rememberSaveable { mutableStateOf(false) }
 
     if (isWideScreen) {
         Row(
@@ -93,6 +98,8 @@ fun MainScreen(navController: NavHostController) {
                 pagerState = pagerState,
                 navController = navController,
                 onHideNavBar = { hideNavBar = it },
+                showInputDialog = showInputDialog,
+                onShowInputDialogChange = { showInputDialog = it },
                 modifier = Modifier.fillMaxHeight().weight(1f)
             )
         }
@@ -106,19 +113,66 @@ fun MainScreen(navController: NavHostController) {
                 pagerState = pagerState,
                 navController = navController,
                 onHideNavBar = { hideNavBar = it },
+                showInputDialog = showInputDialog,
+                onShowInputDialogChange = { showInputDialog = it },
                 modifier = Modifier.fillMaxSize()
             )
             if (!hideNavBar) {
-                AdaptiveNavigationBar(
-                    destinations = destinations,
-                    currentDestination = currentDestination,
-                    onNavigateToDestination = { index ->
-                        currentDestination = destinations[index].route
-                        scope.launch { pagerState.scrollToPage(index) }
-                    },
-                    isWideScreen = false,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 20.dp, vertical = 20.dp)
+                        .navigationBarsPadding()
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        modifier = Modifier.widthIn(max = 400.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        AdaptiveNavigationBar(
+                            modifier = Modifier.weight(1f, fill = false),
+                            destinations = destinations,
+                            currentDestination = currentDestination,
+                            onNavigateToDestination = { index ->
+                                currentDestination = destinations[index].route
+                                scope.launch { pagerState.scrollToPage(index) }
+                            },
+                            isWideScreen = false
+                        )
+
+                        // 加号按钮常驻，不隐藏
+                        Surface(
+                            onClick = {
+                                if (currentDestination == NavigationBarPath.AllNote.route) {
+                                    showInputDialog = true
+                                } else {
+                                    currentDestination = NavigationBarPath.AllNote.route
+                                    scope.launch {
+                                        pagerState.scrollToPage(0)
+                                        showInputDialog = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier.size(64.dp),
+                            shape = CircleShape,
+                            color = SaltTheme.colors.subBackground.copy(alpha = 0.95f),
+                            tonalElevation = 8.dp,
+                            shadowElevation = 8.dp
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = null,
+                                    tint = Color.Black,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -130,6 +184,8 @@ private fun MainPager(
     pagerState: PagerState,
     navController: NavHostController,
     onHideNavBar: (Boolean) -> Unit,
+    showInputDialog: Boolean,
+    onShowInputDialogChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     HorizontalPager(
@@ -138,7 +194,12 @@ private fun MainPager(
         modifier = modifier
     ) { page ->
         when (page) {
-            0 -> AllNotesPage(navController = navController, hideBottomNavBar = onHideNavBar)
+            0 -> AllNotesPage(
+                navController = navController, 
+                hideBottomNavBar = onHideNavBar,
+                externalShowInputDialog = showInputDialog,
+                onExternalShowInputDialogChange = onShowInputDialogChange
+            )
             1 -> CalenderPage(navController = navController)
             2 -> SettingsPage(navController = navController)
         }
@@ -171,8 +232,8 @@ private fun AdaptiveNavigationBar(
                         )
                     },
                     colors = NavigationRailItemDefaults.colors(
-                        selectedIconColor = SaltTheme.colors.highlight,
-                        unselectedIconColor = SaltTheme.colors.text.copy(alpha = 0.6f),
+                        selectedIconColor = Color.Black,
+                        unselectedIconColor = Color.Black.copy(alpha = 0.4f),
                         indicatorColor = Color.Transparent
                     )
                 )
@@ -180,11 +241,7 @@ private fun AdaptiveNavigationBar(
         }
     } else {
         Surface(
-            modifier = modifier
-                .padding(horizontal = 24.dp, vertical = 20.dp)
-                .navigationBarsPadding()
-                .fillMaxWidth()
-                .height(64.dp),
+            modifier = modifier.height(64.dp).widthIn(min = 200.dp, max = 280.dp), 
             shape = RoundedCornerShape(32.dp),
             color = SaltTheme.colors.subBackground.copy(alpha = 0.95f),
             tonalElevation = 8.dp,
@@ -198,7 +255,7 @@ private fun AdaptiveNavigationBar(
                 destinations.forEachIndexed { index, destination ->
                     val selected = destination.route == currentDestination
                     val backgroundColor by animateColorAsState(
-                        targetValue = if (selected) SaltTheme.colors.highlight.copy(alpha = 0.15f) else Color.Transparent,
+                        targetValue = if (selected) Color.Black.copy(alpha = 0.1f) else Color.Transparent,
                         animationSpec = tween(durationMillis = 300),
                         label = "nav_bg_color"
                     )
@@ -218,13 +275,14 @@ private fun AdaptiveNavigationBar(
                     ) {
                         Box(
                             modifier = Modifier
-                                .height(38.dp)
-                                .width(64.dp)
-                                .clip(RoundedCornerShape(19.dp))
+                                .height(42.dp)
+                                .widthIn(max = 76.dp)
+                                .fillMaxWidth(0.8f)
+                                .clip(RoundedCornerShape(21.dp))
                                 .background(backgroundColor),
                             contentAlignment = Alignment.Center
                         ) {
-                            val tint = if (selected) SaltTheme.colors.highlight else SaltTheme.colors.text.copy(alpha = 0.45f)
+                            val tint = if (selected) Color.Black else Color.Black.copy(alpha = 0.35f)
                             val icon = if (selected) destination.selectedIcon else destination.unselectedIcon
                             Icon(
                                 imageVector = icon,

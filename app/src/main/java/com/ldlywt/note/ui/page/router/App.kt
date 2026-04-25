@@ -28,6 +28,7 @@ import com.ldlywt.note.ui.page.settings.DonatePage
 import com.ldlywt.note.ui.page.settings.ExplorePage
 import com.ldlywt.note.ui.page.settings.GalleryPage
 import com.ldlywt.note.ui.page.settings.MoreInfoPage
+import com.ldlywt.note.ui.page.settings.StatisticsPage
 import com.ldlywt.note.ui.page.share.SharePage
 import com.ldlywt.note.ui.page.tag.CommentListPage
 import com.ldlywt.note.ui.page.tag.DateRangePage
@@ -136,6 +137,9 @@ fun NavHostContainer(
         }
         composable<Screen.DataManager> {
             DataManagerPage(navController = navController)
+        }
+        composable<Screen.Statistics> {
+            StatisticsPage(navController = navController)
         }
         composable<Screen.MoreInfo> {
             MoreInfoPage(navController = navController)
