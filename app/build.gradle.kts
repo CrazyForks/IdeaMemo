@@ -13,7 +13,7 @@ plugins {
 
 android {
     namespace = "com.ldlywt.note"
-    compileSdk = 35
+    compileSdk = 36
 
     lint {
         checkReleaseBuilds = false
@@ -28,9 +28,9 @@ android {
     defaultConfig {
         applicationId = "com.ldlywt.note"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 300
-        versionName = "3.0.0"
+        targetSdk = 36
+        versionCode = 310
+        versionName = "3.1.0"
         vectorDrawables {
             useSupportLibrary = true
         }

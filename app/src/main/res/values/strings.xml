@@ -173,4 +173,8 @@
     <string name="stats_written_chars">Characters Written</string>
     <string name="stats_most_active_day">Most Active Day</string>
     <string name="stats_recent_7_days">Recent 7 Days Activity</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_tag">Tag</string>
+    <string name="nav_settings">Settings</string>
 </resources>

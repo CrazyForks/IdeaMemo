@@ -171,4 +171,8 @@
     <string name="stats_written_chars">写下字数</string>
     <string name="stats_most_active_day">最活跃的一天</string>
     <string name="stats_recent_7_days">最近 7 天活跃度</string>
+    <string name="nav_home">笔记</string>
+    <string name="nav_calendar">日历</string>
+    <string name="nav_tag">标签</string>
+    <string name="nav_settings">设置</string>
 </resources>

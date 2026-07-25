@@ -2,6 +2,7 @@ package com.ldlywt.note.ui.page.input
 
 import android.content.ActivityNotFoundException
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,12 +12,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,20 +35,30 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -64,9 +76,7 @@ import com.ldlywt.note.bean.Tag
 import com.ldlywt.note.component.PIconButton
 import com.ldlywt.note.ui.page.LocalMemosViewModel
 import com.ldlywt.note.ui.page.LocalTags
-import com.ldlywt.note.ui.page.home.clickable
 import com.ldlywt.note.utils.handlePickFiles
-import com.ldlywt.note.utils.str
 import com.ldlywt.note.utils.toast
 import com.moriafly.salt.ui.SaltTheme
 import kotlinx.coroutines.launch
@@ -78,14 +88,14 @@ fun ChatInputDialog(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     parentNote: NoteShowBean? = null,
+    onExpandedChange: (Boolean) -> Unit = {},
     dismiss: () -> Unit
 ) {
-    var bottomSheetState by rememberSaveable { mutableStateOf(false) }
-    bottomSheetState = isShow
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
-    var text: TextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+    var text by remember { mutableStateOf(TextFieldValue("")) }
     val context = LocalContext.current
     var tagMenuExpanded by remember { mutableStateOf(false) }
     var tagSearchQuery by remember { mutableStateOf<String?>(null) }
@@ -94,127 +104,129 @@ fun ChatInputDialog(
     val memosViewModel = LocalMemosViewModel.current
     val memoInputViewModel = hiltViewModel<MemoInputViewModel>()
 
+    var isFocused by remember { mutableStateOf(false) }
+    val isActive by remember {
+        derivedStateOf { isShow || isFocused || text.text.isNotEmpty() || memoInputViewModel.uploadAttachments.isNotEmpty() }
+    }
+    val isInteracting by remember {
+        derivedStateOf { isShow || isFocused }
+    }
+
+    val density = LocalDensity.current
+    val isImeVisible = WindowInsets.ime.getBottom(density) > 0
+    var lastImeVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isInteracting) {
+        onExpandedChange(isInteracting)
+    }
+
+    LaunchedEffect(isImeVisible) {
+        if (lastImeVisible && !isImeVisible && isFocused) {
+            focusManager.clearFocus()
+            dismiss()
+        }
+        lastImeVisible = isImeVisible
+    }
+
     val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            photoImageUri?.let {
+            photoImageUri?.let { uri ->
                 coroutineScope.launch {
-                    handlePickFiles(setOf(it)) {
-                        memoInputViewModel.uploadAttachments.addAll(it)
+                    handlePickFiles(setOf(uri)) { list ->
+                        memoInputViewModel.uploadAttachments.addAll(list)
                     }
                 }
             }
         }
     }
 
-    // 创建一个 launcher，用于选择多张图片
     val pickMultipleMedia = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(3) // 最多选择 3 张图片
+        contract = ActivityResultContracts.PickMultipleVisualMedia(3)
     ) { uris ->
         coroutineScope.launch {
-            handlePickFiles(uris.toSet()) {
-                memoInputViewModel.uploadAttachments.addAll(it)
+            handlePickFiles(uris.toSet()) { list ->
+                memoInputViewModel.uploadAttachments.addAll(list)
             }
         }
     }
 
     fun submit() = coroutineScope.launch {
-        softwareKeyboardController?.hide()
-        focusRequester.freeFocus()
         val content = text.text
-        memosViewModel.insertOrUpdate(Note(content = content, attachments = memoInputViewModel.uploadAttachments.toList(), parentNoteId = parentNote?.note?.noteId))
-        text = TextFieldValue("")
-        memoInputViewModel.uploadAttachments.clear()
+        if (content.isNotBlank() || memoInputViewModel.uploadAttachments.isNotEmpty()) {
+            memosViewModel.insertOrUpdate(Note(content = content, attachments = memoInputViewModel.uploadAttachments.toList(), parentNoteId = parentNote?.note?.noteId))
+            text = TextFieldValue("")
+            memoInputViewModel.uploadAttachments.clear()
+        }
+        focusManager.clearFocus()
+        softwareKeyboardController?.hide()
         dismiss()
     }
 
-
-    LaunchedEffect(bottomSheetState) {
-        if (bottomSheetState) {
+    LaunchedEffect(isShow) {
+        if (isShow) {
             focusRequester.requestFocus()
             softwareKeyboardController?.show()
-        } else {
-            softwareKeyboardController?.hide()
-            // 弹框消失时执行你想要的操作
         }
     }
+
+    // 处理返回键：一步到位清除焦点、隐藏键盘并收起状态
+    BackHandler(enabled = isActive || isFocused) {
+        focusManager.clearFocus()
+        softwareKeyboardController?.hide()
+        dismiss()
+    }
+
     @Composable
     fun TagButton(tagList: List<Tag>) {
-        // 根据搜索内容过滤标签
         val filteredTags = remember(tagList, tagSearchQuery) {
-            if (tagSearchQuery == null) {
-                tagList
-            } else {
-                tagList.filter { it.tag.contains(tagSearchQuery!!, ignoreCase = true) }
-            }
+            if (tagSearchQuery == null) tagList else tagList.filter { it.tag.contains(tagSearchQuery!!, ignoreCase = true) }
         }
 
         fun insertTagText(tagContent: String) {
             val newText = text.text.replaceRange(text.selection.min, text.selection.max, tagContent)
-            val newSelection = TextRange(text.selection.min + tagContent.length)
-            text = text.copy(newText, newSelection)
+            text = text.copy(newText, TextRange(text.selection.min + tagContent.length))
         }
 
-        // 替换光标前的 #搜索词
         fun replaceTagText(tagContent: String) {
             val cursorPos = text.selection.start
             val textBeforeCursor = text.text.substring(0, cursorPos)
             val lastHashIndex = textBeforeCursor.lastIndexOf('#')
             if (lastHashIndex != -1) {
-                val cleanTag = tagContent.removePrefix("#")
-                val replacement = "#$cleanTag "
+                val replacement = "#${tagContent.removePrefix("#")} "
                 val newText = text.text.replaceRange(lastHashIndex, cursorPos, replacement)
-                val newSelection = TextRange(lastHashIndex + replacement.length)
-                text = text.copy(newText, newSelection)
+                text = text.copy(newText, TextRange(lastHashIndex + replacement.length))
             }
         }
 
-        // 根据tagList是否为空选择不同的图标
         val tagIcon = if (tagList.isEmpty()) Icons.Filled.Tag else Icons.Outlined.Tag
-
-        // 统一的图标按钮
-        PIconButton(
-            imageVector = tagIcon,
-            contentDescription = stringResource(R.string.tag),
-        ) {
+        PIconButton(imageVector = tagIcon, contentDescription = stringResource(R.string.tag)) {
             val cursorPos = text.selection.start
             val textBeforeCursor = text.text.substring(0, cursorPos)
             val lastHashIndex = textBeforeCursor.lastIndexOf('#')
             val fragment = if (lastHashIndex != -1) textBeforeCursor.substring(lastHashIndex + 1) else null
-
             if (fragment != null && !fragment.contains(" ") && !fragment.contains("\n")) {
-                // 如果当前已经在输入标签，则直接显示/隐藏菜单，并保留搜索词
                 tagSearchQuery = fragment
                 tagMenuExpanded = !tagMenuExpanded
             } else {
-                // 否则插入 # 并显示菜单
                 insertTagText("#")
                 tagSearchQuery = ""
                 tagMenuExpanded = tagList.isNotEmpty()
             }
         }
 
-        // 仅当有标签且菜单展开时显示下拉菜单
         if (filteredTags.isNotEmpty() && tagMenuExpanded) {
             Box {
                 DropdownMenu(
                     modifier = Modifier.wrapContentHeight().heightIn(max = 400.dp),
                     expanded = tagMenuExpanded,
-                    onDismissRequest = {
-                        tagMenuExpanded = false
-                        tagSearchQuery = null
-                    },
+                    onDismissRequest = { tagMenuExpanded = false; tagSearchQuery = null },
                     properties = PopupProperties(focusable = false)
                 ) {
                     filteredTags.forEach { tag ->
                         DropdownMenuItem(
                             text = { Text(tag.tag) },
                             onClick = {
-                                if (tagSearchQuery != null) {
-                                    replaceTagText(tag.tag)
-                                } else {
-                                    val cleanTag = tag.tag.removePrefix("#")
-                                    insertTagText("#$cleanTag ")
-                                }
+                                if (tagSearchQuery != null) replaceTagText(tag.tag) else insertTagText("#${tag.tag.removePrefix("#")} ")
                                 tagMenuExpanded = false
                                 tagSearchQuery = null
                             },
@@ -225,135 +237,141 @@ fun ChatInputDialog(
         }
     }
 
-    if (isShow) {
-        Box(
-            contentAlignment = Alignment.BottomCenter, modifier = Modifier
-                .fillMaxSize()
-                .clickable(showRipple = false) {
-                    dismiss()
-                }
-        ) {
-            Column(
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(elevation = 24.dp) // 增加上边缘阴影
+            .background(color = SaltTheme.colors.background) // 移除背景圆角以贴合边缘
+            .border(width = 1.dp, color = SaltTheme.colors.subText.copy(alpha = 0.05f))
+            .imePadding() // 核心：移除 animateContentSize 动画，实现零延迟随键盘升起
+            .navigationBarsPadding()
+    ) {
+        // 1. 引用回复内容 (活跃状态且有引用时显示)
+        if (isActive && parentNote != null) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp), color = SaltTheme.colors.background)
-                    .imePadding() // 将此移动到父容器中，使其在键盘弹出时整体上移，不再产生多余空白
-                    .padding(bottom = 16.dp) // 基础内边距
+                    .padding(start = 12.dp, end = 12.dp, top = 8.dp)
+                    .background(SaltTheme.colors.subBackground, RoundedCornerShape(6.dp))
+                    .border(1.dp, SaltTheme.colors.subText.copy(alpha = 0.1f), RoundedCornerShape(6.dp))
+                    .padding(8.dp)
             ) {
-                if (parentNote != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .background(SaltTheme.colors.subBackground, RoundedCornerShape(8.dp))
-                            .border(1.dp, SaltTheme.colors.subText.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = parentNote.note.content,
-                            maxLines = 4,
-                            overflow = TextOverflow.Ellipsis,
-                            style = SaltTheme.textStyles.paragraph.copy(fontSize = 13.sp, color = SaltTheme.colors.subText)
-                        )
-                    }
-                }
+                Text(
+                    text = parentNote.note.content,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = SaltTheme.textStyles.paragraph.copy(fontSize = 12.sp, color = SaltTheme.colors.subText)
+                )
+            }
+        }
 
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = text,
-                    minLines = 5,
-                    textStyle = SaltTheme.textStyles.paragraph,
-                    onValueChange = { it: TextFieldValue ->
-                        text = it
-                        val cursorPos = it.selection.start
-                        val textBeforeCursor = it.text.substring(0, cursorPos)
-                        val lastHashIndex = textBeforeCursor.lastIndexOf('#')
-
-                        if (lastHashIndex != -1) {
-                            val fragment = textBeforeCursor.substring(lastHashIndex + 1)
-                            // 如果包含空格或换行，隐藏弹窗
-                            if (fragment.contains(" ") || fragment.contains("\n")) {
-                                tagMenuExpanded = false
-                                tagSearchQuery = null
-                            } else {
-                                tagSearchQuery = fragment
-                                // 检查是否有匹配项
-                                val hasMatch = tagList.any { it.tag.contains(fragment, ignoreCase = true) }
-                                tagMenuExpanded = hasMatch
-                            }
-                        } else {
+        // 2. 输入框区域
+        Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { it: TextFieldValue ->
+                    text = it
+                    // 标签自动提示逻辑
+                    val cursor = it.selection.start
+                    val textBefore = it.text.substring(0, cursor)
+                    val lastHash = textBefore.lastIndexOf('#')
+                    if (lastHash != -1) {
+                        val fragment = textBefore.substring(lastHash + 1)
+                        if (fragment.contains(" ") || fragment.contains("\n")) {
                             tagMenuExpanded = false
                             tagSearchQuery = null
+                        } else {
+                            tagSearchQuery = fragment
+                            tagMenuExpanded = tagList.any { it.tag.contains(fragment, ignoreCase = true) }
                         }
-                    },
-                    modifier =
-                        Modifier
-                            .padding(horizontal = 16.dp) // 增加水平边距
-                            .focusRequester(focusRequester)
-                            .fillMaxWidth()
-                            .heightIn(max = 280.dp),
-                    keyboardOptions = keyboardOptions,
-                    label = { Text(R.string.any_thoughts.str) },
-                )
-
-                if (memoInputViewModel.uploadAttachments.isNotEmpty()) {
-                    LazyRow(
-                        modifier = Modifier
-                            .height(80.dp)
-                            .padding(horizontal = 15.dp, vertical = 10.dp), 
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(memoInputViewModel.uploadAttachments.toList()) { resource ->
-                            InputImage(attachment = resource, true, delete = { pat ->
-                                memoInputViewModel.uploadAttachments.remove(memoInputViewModel.uploadAttachments.firstOrNull { it.path == pat })
-                            })
-                        }
+                    } else {
+                        tagMenuExpanded = false
+                        tagSearchQuery = null
                     }
-                }
-
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TagButton(tagList)
-                        PIconButton(
-                            imageVector = Icons.Outlined.Image,
-                            contentDescription = stringResource(R.string.add_image),
-                        ) {
-                            pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        }
-                        PIconButton(
-                            imageVector = Icons.Outlined.PhotoCamera,
-                            contentDescription = stringResource(R.string.take_photo),
-                        ) {
-                            try {
-                                val imagesFolder = File(context.cacheDir, "capture_picture")
-                                if (!imagesFolder.exists()) {
-                                    imagesFolder.mkdirs()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { isFocused = it.isFocused }
+                    .heightIn(min = 44.dp, max = 200.dp)
+                    .onPreviewKeyEvent { 
+                        // 拦截返回键事件，一步到位关闭：在 KeyDown 时直接消费并执行关闭逻辑
+                        if (it.key == Key.Back) {
+                            if (isFocused || isActive) {
+                                if (it.type == KeyEventType.KeyDown) {
+                                    focusManager.clearFocus()
+                                    softwareKeyboardController?.hide()
+                                    dismiss()
                                 }
-                                val file = File.createTempFile("capture_picture_", ".jpg", imagesFolder)
-                                val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", file)
-                                photoImageUri = uri
-                                takePhoto.launch(uri)
-                            } catch (e: ActivityNotFoundException) {
-                                toast(e.localizedMessage ?: "Unable to take picture.")
-                            }
-                        }
-                    }
+                                true
+                            } else false
+                        } else false
+                    },
+                textStyle = SaltTheme.textStyles.paragraph.copy(fontSize = 15.sp),
+                placeholder = { Text(stringResource(R.string.any_thoughts), color = SaltTheme.colors.subText, fontSize = 15.sp) },
+                shape = RoundedCornerShape(6.dp), // 修改圆角为 6dp
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = SaltTheme.colors.subBackground,
+                    unfocusedContainerColor = SaltTheme.colors.subBackground,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = SaltTheme.colors.highlight,
+                    focusedTextColor = SaltTheme.colors.text,
+                    unfocusedTextColor = SaltTheme.colors.text
+                ),
+                maxLines = 10,
+                keyboardOptions = keyboardOptions
+            )
+        }
 
-                    PIconButton(
-                        imageVector = Icons.Outlined.Send,
-                        contentDescription = stringResource(R.string.send),
-                    ) {
-                        submit()
+        // 3. 附件预览
+        if (isActive && memoInputViewModel.uploadAttachments.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier.height(80.dp).padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(memoInputViewModel.uploadAttachments.toList(), key = { it.path }) { resource ->
+                    InputImage(attachment = resource, isEdit = true, delete = { pat ->
+                        memoInputViewModel.uploadAttachments.remove(memoInputViewModel.uploadAttachments.firstOrNull { it.path == pat })
+                    })
+                }
+            }
+        }
+
+        // 4. 操作栏：默认始终展示核心按钮
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                // 核心功能按钮默认显示
+                TagButton(tagList)
+                PIconButton(imageVector = Icons.Outlined.Image, contentDescription = stringResource(R.string.add_image)) {
+                    pickMultipleMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                }
+                PIconButton(imageVector = Icons.Outlined.PhotoCamera, contentDescription = stringResource(R.string.take_photo)) {
+                    try {
+                        val imagesFolder = File(context.cacheDir, "capture_picture").apply { if (!exists()) mkdirs() }
+                        val file = File.createTempFile("capture_picture_", ".jpg", imagesFolder)
+                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                        photoImageUri = uri
+                        takePhoto.launch(uri)
+                    } catch (e: ActivityNotFoundException) {
+                        toast(e.localizedMessage ?: "Unable to take picture.")
                     }
                 }
             }
+
+            // 发送按钮
+            PIconButton(
+                imageVector = Icons.Outlined.Send,
+                contentDescription = stringResource(R.string.send),
+                tint = if (text.text.isNotEmpty() || memoInputViewModel.uploadAttachments.isNotEmpty()) SaltTheme.colors.highlight else SaltTheme.colors.subText,
+                onClick = { if (text.text.isNotEmpty() || memoInputViewModel.uploadAttachments.isNotEmpty()) submit() else focusRequester.requestFocus() }
+            )
         }
     }
 }

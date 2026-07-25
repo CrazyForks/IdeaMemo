@@ -1,9 +1,11 @@
 package com.ldlywt.note.ui.page.home
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,10 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AvTimer
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -49,6 +49,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -123,107 +124,126 @@ fun AllNotePage(
         showWarnDialog = SettingsPreferences.firstLaunch.first()
     }
 
-    RYScaffold(
-        navController = null,
-        navigationIcon = {
-            IconButton(onClick = onOpenDrawer) {
-                Icon(
-                    imageVector = Icons.Rounded.Menu,
-                    contentDescription = "Menu",
-                    tint = SaltTheme.colors.text
-                )
-            }
-        },
-        titleContent = {
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                HomeTabTitle(
-                    selected = !isGalleryMode,
-                    text = stringResource(R.string.home_title_one),
-                    onClick = { isGalleryMode = false }
-                )
-                HomeTabTitle(
-                    selected = isGalleryMode,
-                    text = stringResource(R.string.home_title_two),
-                    onClick = { isGalleryMode = true }
-                )
-            }
-        },
-        actions = {
-            Toolbar(navController, dateRangeBlock = {
-                showDateRangePicker = true
-            }, onSortChanged = {
-                scrollToTop(coroutineScope, listState)
-            })
-        },
-        content = {
+    // 状态管理：控制背景遮罩
+    var isInputActive by remember { mutableStateOf(false) }
 
-            Box {
-                if (isGalleryMode) {
-                    val galleryNotes = remember(noteState.notes) {
-                        noteState.notes.filter { it.note.attachments.isNotEmpty() }
-                    }
-                    LazyVerticalStaggeredGrid(
-                        columns = StaggeredGridCells.Fixed(2),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        items(galleryNotes) { noteBean ->
-                            GalleryItem(noteBean) {
-                                navController.navigate(Screen.MemoPreview(noteBean.note.noteId))
+    Box(modifier = Modifier.fillMaxSize()) {
+        RYScaffold(
+            navController = null,
+            navigationIcon = {
+                IconButton(onClick = onOpenDrawer) {
+                    Icon(
+                        imageVector = Icons.Rounded.Menu,
+                        contentDescription = "Menu",
+                        tint = SaltTheme.colors.text
+                    )
+                }
+            },
+            titleContent = {
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HomeTabTitle(
+                        selected = !isGalleryMode,
+                        text = stringResource(R.string.home_title_one),
+                        onClick = { isGalleryMode = false }
+                    )
+                    HomeTabTitle(
+                        selected = isGalleryMode,
+                        text = stringResource(R.string.home_title_two),
+                        onClick = { isGalleryMode = true }
+                    )
+                }
+            },
+            actions = {
+                Toolbar(navController, dateRangeBlock = {
+                    showDateRangePicker = true
+                }, onSortChanged = {
+                    scrollToTop(coroutineScope, listState)
+                })
+            },
+            content = {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (isGalleryMode) {
+                        val galleryNotes = remember(noteState.notes) {
+                            noteState.notes.filter { it.note.attachments.isNotEmpty() }
+                        }
+                        LazyVerticalStaggeredGrid(
+                            columns = StaggeredGridCells.Fixed(2),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp)
+                        ) {
+                            items(galleryNotes, key = { it.note.noteId }) { noteBean ->
+                                GalleryItem(noteBean) {
+                                    navController.navigate(Screen.MemoPreview(noteBean.note.noteId))
+                                }
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(100.dp))
                             }
                         }
-                        item {
-                            Spacer(modifier = Modifier.height(160.dp))
+                    } else {
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(
+                                count = noteState.notes.size,
+                                key = { index -> noteState.notes[index].note.noteId }
+                            ) { index ->
+                                NoteCard(
+                                    noteShowBean = noteState.notes[index],
+                                    navHostController = navController,
+                                    onCommentClick = {
+                                        parentNoteForComment = it
+                                        onExternalShowInputDialogChange(true)
+                                    }
+                                )
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(100.dp))
+                            }
                         }
                     }
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize()
+
+                    // 遮罩层：仅在输入框活跃时显示
+                    AnimatedVisibility(
+                        visible = isInputActive,
+                        enter = fadeIn(),
+                        exit = fadeOut()
                     ) {
-                        items(
-                            count = noteState.notes.size,
-                            key = { noteState.notes[it].note.noteId }
-                        ) { index ->
-                            NoteCard(
-                                noteShowBean = noteState.notes[index],
-                                navHostController = navController,
-                                onCommentClick = {
-                                    parentNoteForComment = it
-                                    onExternalShowInputDialogChange(true)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+//                                .background(Color.Black.copy(alpha = 0.4f))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    onExternalShowInputDialogChange(false)
+                                    parentNoteForComment = null
                                 }
-                            )
-                        }
-                        item {
-                            Spacer(modifier = Modifier.height(160.dp))
-                        }
+                        )
                     }
-                }
-
-                if (externalShowInputDialog) {
-                    BackHandler(enabled = true) {
-                        onExternalShowInputDialogChange(false)
-                        parentNoteForComment = null
-                    }
-                }
-
-                ChatInputDialog(
-                    isShow = externalShowInputDialog,
-                    parentNote = parentNoteForComment,
-                    modifier =
-                        Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 100.dp),
-                ) {
-                    onExternalShowInputDialogChange(false)
-                    parentNoteForComment = null
-                    scrollToTop(coroutineScope, listState)
                 }
             }
+        )
+
+        // 真实输入框：直接放在 Box 底部，不使用 Scaffold 的 bottomBar 以获得更好的 IME 同步
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            ChatInputDialog(
+                isShow = externalShowInputDialog,
+                parentNote = parentNoteForComment,
+                onExpandedChange = { isInputActive = it },
+                dismiss = {
+                    onExternalShowInputDialogChange(false)
+                    parentNoteForComment = null
+                }
+            )
         }
-    )
+    }
 
     if (showWarnDialog) {
         FirstTimeWarmDialog {
@@ -248,7 +268,6 @@ fun AllNotePage(
             }
         )
     }
-
 }
 
 @Composable
@@ -341,6 +360,17 @@ private fun Toolbar(
 ) {
     IconButton(
         onClick = {
+            dateRangeBlock()
+        },
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.AvTimer,
+            contentDescription = R.string.date_range.str,
+            tint = SaltTheme.colors.text
+        )
+    }
+    IconButton(
+        onClick = {
             navController.navigate(route = Screen.Search) {
                 launchSingleTop = true
             }
@@ -368,42 +398,6 @@ private fun Toolbar(
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(SaltTheme.colors.popup)
         ) {
-            DropdownMenuItem(
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Tag, contentDescription = null, modifier = Modifier.size(18.dp), tint = SaltTheme.colors.text)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.all_tag), fontSize = 14.sp, color = SaltTheme.colors.text)
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    navController.navigate(route = Screen.TagList) {
-                        launchSingleTop = true
-                    }
-                }
-            )
-            DropdownMenuItem(
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.AvTimer, contentDescription = null, modifier = Modifier.size(18.dp), tint = SaltTheme.colors.text)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = stringResource(R.string.date_range), fontSize = 14.sp, color = SaltTheme.colors.text)
-                    }
-                },
-                onClick = {
-                    expanded = false
-                    dateRangeBlock()
-                }
-            )
-
-            Spacer(
-                modifier = Modifier
-                    .height(4.dp)
-                    .fillMaxWidth()
-                    .background(SaltTheme.colors.background.copy(alpha = 0.5f))
-            )
-
             SortFilterMenuContent(onSortChanged = {
                 expanded = false
                 onSortChanged()
@@ -492,8 +486,6 @@ fun ModernDateRangePicker(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val currentYear = LocalDate.now().year
-
     var startYear by remember { mutableIntStateOf(LocalDate.now().year) }
     var startMonth by remember { mutableIntStateOf(LocalDate.now().monthValue) }
     var startDay by remember { mutableIntStateOf(LocalDate.now().dayOfMonth) }
@@ -508,7 +500,7 @@ fun ModernDateRangePicker(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
         containerColor = SaltTheme.colors.background,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = SaltTheme.colors.subText.copy(alpha = 0.4f)) }
+        dragHandle = { DragHandle() }
     ) {
         Column(
             modifier = Modifier
@@ -613,6 +605,22 @@ fun ModernDateRangePicker(
 }
 
 @Composable
+fun DragHandle() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 32.dp, height = 4.dp)
+                .background(SaltTheme.colors.subText.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+        )
+    }
+}
+
+@Composable
 fun WheelDatePicker(
     year: Int,
     month: Int,
@@ -637,13 +645,13 @@ fun WheelDatePicker(
         horizontalArrangement = Arrangement.Center
     ) {
         Box(modifier = Modifier.weight(1f)) {
-            WheelPicker(items = years, initialItem = year, onItemSelected = onYearChange)
+            WheelPicker<Int>(items = years, initialItem = year, onItemSelected = onYearChange)
         }
         Box(modifier = Modifier.weight(1f)) {
-            WheelPicker(items = months, initialItem = month, onItemSelected = onMonthChange)
+            WheelPicker<Int>(items = months, initialItem = month, onItemSelected = onMonthChange)
         }
         Box(modifier = Modifier.weight(1f)) {
-            WheelPicker(items = days, initialItem = day, onItemSelected = onDayChange)
+            WheelPicker<Int>(items = days, initialItem = day, onItemSelected = onDayChange)
         }
     }
 }
@@ -658,13 +666,9 @@ fun <T> WheelPicker(
         initialFirstVisibleItemIndex = items.indexOf(initialItem).coerceAtLeast(0)
     )
 
-    val coroutineScope = rememberCoroutineScope()
-
-    // 自动吸附到中心
     LaunchedEffect(lazyListState.isScrollInProgress) {
         if (!lazyListState.isScrollInProgress) {
             val centerIndex = lazyListState.firstVisibleItemIndex
-            // 这里简单处理，取第一个可见项
             if (centerIndex < items.size) {
                 onItemSelected(items[centerIndex])
                 lazyListState.animateScrollToItem(centerIndex)
@@ -676,7 +680,6 @@ fun <T> WheelPicker(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // 选择框遮罩
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -692,6 +695,7 @@ fun <T> WheelPicker(
         ) {
             items(items.size) { index ->
                 val item = items[index]
+                val isSelected by remember { derivedStateOf { lazyListState.firstVisibleItemIndex == index } }
                 Text(
                     text = item.toString(),
                     modifier = Modifier
@@ -700,8 +704,8 @@ fun <T> WheelPicker(
                     textAlign = TextAlign.Center,
                     style = SaltTheme.textStyles.main.copy(
                         fontSize = 18.sp,
-                        fontWeight = if (lazyListState.firstVisibleItemIndex == index) FontWeight.Bold else FontWeight.Normal,
-                        color = if (lazyListState.firstVisibleItemIndex == index) SaltTheme.colors.text else SaltTheme.colors.subText
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) SaltTheme.colors.text else SaltTheme.colors.subText
                     )
                 )
             }

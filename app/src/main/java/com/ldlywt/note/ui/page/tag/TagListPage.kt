@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.Style
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,7 +55,10 @@ import com.moriafly.salt.ui.UnstableSaltApi
 
 @OptIn(ExperimentalLayoutApi::class, UnstableSaltApi::class)
 @Composable
-fun TagListPage(navController: NavHostController) {
+fun TagListPage(
+    navController: NavHostController,
+    onOpenDrawer: (() -> Unit)? = null
+) {
     val tagList = LocalTags.current.filter { it.tag.isNotBlank() }
     val noteViewModel: NoteViewModel = LocalMemosViewModel.current
     val allYears = remember { mutableStateListOf<String>() }
@@ -80,8 +81,15 @@ fun TagListPage(navController: NavHostController) {
             .statusBarsPadding()
     ) {
         TitleBar(
-            onBack = { navController.debouncedPopBackStack() },
-            text = stringResource(R.string.tag)
+            onBack = {
+                if (onOpenDrawer != null) {
+                    onOpenDrawer()
+                } else {
+                    navController.debouncedPopBackStack()
+                }
+            },
+            text = stringResource(R.string.tag),
+            showBackBtn = true
         )
 
         LazyColumn(
