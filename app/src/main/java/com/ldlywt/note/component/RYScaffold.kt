@@ -35,6 +35,7 @@ fun RYScaffold(
     floatingActionButton: @Composable() (() -> Unit)? = null,
     snackBarHostState: SnackbarHostState? = null,
     titleContent: @Composable (() -> Unit)? = null,
+    navigationIcon: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit = {},
 ) {
     Scaffold(
@@ -53,7 +54,9 @@ fun RYScaffold(
                         }
                     },
                     navigationIcon = {
-                        if (navController != null) {
+                        if (navigationIcon != null) {
+                            navigationIcon()
+                        } else if (navController != null) {
                             IconButton(onClick = { navController.debouncedPopBackStack() }) {
                                 Icon(
                                     imageVector = Icons.Sharp.ArrowBackIosNew,

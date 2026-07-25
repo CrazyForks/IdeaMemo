@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,8 +25,11 @@ import androidx.compose.material.icons.outlined.LocalCafe
 import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,8 +57,8 @@ import com.google.android.material.color.DynamicColors
 import com.ldlywt.note.R
 import com.ldlywt.note.component.ItemPopup
 import com.ldlywt.note.component.LoadingComponent
+import com.ldlywt.note.component.RYScaffold
 import com.ldlywt.note.ui.page.LocalMemosState
-import com.ldlywt.note.ui.page.LocalTags
 import com.ldlywt.note.ui.page.data.DataManagerViewModel
 import com.ldlywt.note.ui.page.main.MainActivity
 import com.ldlywt.note.ui.page.router.Screen
@@ -84,27 +85,24 @@ import java.util.Locale
 
 @Composable
 fun SettingsPage(
-    navController: NavHostController
+    navController: NavHostController,
+    onOpenDrawer: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SaltTheme.colors.background)
-            .statusBarsPadding()
-    ) {
-        Spacer(modifier = Modifier.height(12.dp))
-        Column {
-            Text(
-                text = R.string.settings.str,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 12.dp),
-                style = SaltTheme.textStyles.main.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            )
+    RYScaffold(
+        title = R.string.settings.str,
+        navigationIcon = {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Rounded.Menu,
+                    contentDescription = "Menu",
+                    tint = SaltTheme.colors.text
+                )
+            }
+        },
+        content = {
+            SettingsPreferenceScreen(navController)
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        SettingsPreferenceScreen(navController)
-    }
+    )
 }
 
 data class SettingsBean(val title: Int, val imageVector: ImageVector, val onClick: () -> Unit)
@@ -155,13 +153,6 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         content = {
-            item {
-                HeatContent()
-            }
-
-            item {
-                SettingsHeadLayout()
-            }
 
             item {
                 RoundedColumn {
@@ -371,8 +362,6 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
 fun SettingsHeadLayout() {
     val noteState = LocalMemosState.current
     val memos = noteState.notes
-    val tagList = LocalTags.current
-
     Row(
         modifier = Modifier
             .fillMaxWidth()

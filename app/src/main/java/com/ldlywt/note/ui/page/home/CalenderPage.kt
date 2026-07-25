@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,7 +62,7 @@ import java.util.Locale
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun CalenderPage(navController: NavHostController) {
+fun CalenderPage(navController: NavHostController, onOpenDrawer: () -> Unit) {
 
     val noteViewModel = LocalMemosViewModel.current
     val currentMonth = remember { YearMonth.now() }
@@ -81,8 +82,6 @@ fun CalenderPage(navController: NavHostController) {
     )
 
     LaunchedEffect(currentLocalDate) {
-        // 这里是 currentLocalDate 变化后的操作
-        // 例如，在此处可以打印当前日期
         lunchIo {
             filterList.clear()
             filterList.addAll(noteViewModel.getNotesOnSelectedDate(currentLocalDate))
@@ -100,7 +99,7 @@ fun CalenderPage(navController: NavHostController) {
             scope.launch {
                 calendarState.animateScrollToMonth(YearMonth.now())
             }
-        })
+        }, onOpenDrawer = onOpenDrawer)
         LazyColumn {
             stickyHeader {
                 Column {
@@ -138,7 +137,6 @@ fun CalenderPage(navController: NavHostController) {
                 }
             }
             
-            // 为悬浮导航栏留出间距
             item {
                 Spacer(modifier = Modifier.height(120.dp))
             }
@@ -149,12 +147,20 @@ fun CalenderPage(navController: NavHostController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IndexTopBar(
-    date: LocalDate, navigateToToday: () -> Unit, modifier: Modifier = Modifier
+    date: LocalDate, navigateToToday: () -> Unit, onOpenDrawer: () -> Unit, modifier: Modifier = Modifier
 ) {
-    // 日期
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = SaltTheme.colors.background),
         modifier = modifier.fillMaxWidth(),
+        navigationIcon = {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Rounded.Menu,
+                    contentDescription = "Menu",
+                    tint = SaltTheme.colors.text
+                )
+            }
+        },
         title = {
             Row(modifier = Modifier, verticalAlignment = Alignment.CenterVertically) {
 

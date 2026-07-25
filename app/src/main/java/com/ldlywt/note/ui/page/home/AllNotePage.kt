@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Tag
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -91,9 +92,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 @Composable
-fun AllNotesPage(
+fun AllNotePage(
     navController: NavHostController,
-    hideBottomNavBar: ((Boolean) -> Unit),
+    onOpenDrawer: () -> Unit,
     externalShowInputDialog: Boolean = false,
     onExternalShowInputDialogChange: (Boolean) -> Unit = {}
 ) {
@@ -124,6 +125,15 @@ fun AllNotesPage(
 
     RYScaffold(
         navController = null,
+        navigationIcon = {
+            IconButton(onClick = onOpenDrawer) {
+                Icon(
+                    imageVector = Icons.Rounded.Menu,
+                    contentDescription = "Menu",
+                    tint = SaltTheme.colors.text
+                )
+            }
+        },
         titleContent = {
             Row(
                 verticalAlignment = Alignment.Bottom,
@@ -483,8 +493,6 @@ fun ModernDateRangePicker(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val currentYear = LocalDate.now().year
-    val years = remember { (currentYear - 10..currentYear + 10).toList() }
-    val months = remember { (1..12).toList() }
 
     var startYear by remember { mutableIntStateOf(LocalDate.now().year) }
     var startMonth by remember { mutableIntStateOf(LocalDate.now().monthValue) }
@@ -515,7 +523,7 @@ fun ModernDateRangePicker(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = onDismissRequest) {
-                    Text(stringResource(R.string.cancel), color = SaltTheme.colors.subText)
+                    Text(text = stringResource(R.string.cancel), color = SaltTheme.colors.subText)
                 }
                 Text(
                     text = stringResource(R.string.date_range),
@@ -528,7 +536,7 @@ fun ModernDateRangePicker(
                         .atTime(23, 59, 59).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                     onConfirm(start, end)
                 }) {
-                    Text(stringResource(R.string.confirm), color = SaltTheme.colors.highlight)
+                    Text(text = stringResource(R.string.confirm), color = SaltTheme.colors.highlight)
                 }
             }
 

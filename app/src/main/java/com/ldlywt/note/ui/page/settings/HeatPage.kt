@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -38,14 +37,12 @@ import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.CalendarMonth
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.core.yearMonth
-import com.ldlywt.note.ui.page.home.displayText
 import com.ldlywt.note.ui.page.LocalMemosViewModel
+import com.ldlywt.note.ui.page.home.displayText
 import com.moriafly.salt.ui.SaltTheme
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 enum class Level(val color: Color) {
     Zero(Color(0xFFEBEDF0)),
@@ -67,7 +64,7 @@ fun HeatContent() {
     Column(
         modifier = Modifier
             .padding(horizontal = 12.dp)
-            .fillMaxSize()
+            .fillMaxWidth()
     ) {
         val state = rememberHeatMapCalendarState(
             startMonth = startDate.yearMonth,
