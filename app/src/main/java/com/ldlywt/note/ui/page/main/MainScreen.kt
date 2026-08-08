@@ -15,13 +15,16 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.automirrored.outlined.Label
+import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.automirrored.rounded.Label
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -48,6 +51,7 @@ import androidx.navigation.NavHostController
 import com.ldlywt.note.R
 import com.ldlywt.note.ui.page.home.AllNotePage
 import com.ldlywt.note.ui.page.home.CalenderPage
+import com.ldlywt.note.ui.page.router.Screen
 import com.ldlywt.note.ui.page.settings.HeatContent
 import com.ldlywt.note.ui.page.settings.SettingsHeadLayout
 import com.ldlywt.note.ui.page.settings.SettingsPage
@@ -108,6 +112,41 @@ fun MainScreen(navController: NavHostController) {
                             selectedContainerColor = Color(0xFF0ECF66),
                             selectedIconColor = Color.White,
                             selectedTextColor = Color.White,
+                            unselectedContainerColor = Color.Transparent,
+                            unselectedIconColor = Color.Black,
+                            unselectedTextColor = Color.Black
+                        )
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                val extraItems = listOf(
+                    Triple(R.string.random_walk, Icons.Outlined.Explore, Screen.RandomWalk),
+                    Triple(R.string.gallery, Icons.Outlined.Photo, Screen.Gallery),
+                    Triple(R.string.statistics, Icons.Outlined.BarChart, Screen.Statistics)
+                )
+
+                extraItems.forEach { (titleRes, icon, screen) ->
+                    NavigationDrawerItem(
+                        label = { Text(titleRes.str, fontSize = 18.sp) },
+                        selected = false,
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            scope.launch {
+                                drawerState.close()
+                                navController.navigate(screen)
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+                        shape = RoundedCornerShape(4.dp),
+                        colors = NavigationDrawerItemDefaults.colors(
                             unselectedContainerColor = Color.Transparent,
                             unselectedIconColor = Color.Black,
                             unselectedTextColor = Color.Black

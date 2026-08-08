@@ -15,19 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material.icons.outlined.LocalCafe
-import androidx.compose.material.icons.outlined.Photo
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -40,7 +35,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
@@ -62,7 +56,6 @@ import com.ldlywt.note.ui.page.LocalMemosState
 import com.ldlywt.note.ui.page.data.DataManagerViewModel
 import com.ldlywt.note.ui.page.main.MainActivity
 import com.ldlywt.note.ui.page.router.Screen
-import com.ldlywt.note.utils.Constant
 import com.ldlywt.note.utils.DonateUtils
 import com.ldlywt.note.utils.HttpServer
 import com.ldlywt.note.utils.LanguageUtils
@@ -71,7 +64,6 @@ import com.ldlywt.note.utils.openUrl
 import com.ldlywt.note.utils.str
 import com.ldlywt.note.utils.toYYMMDD
 import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.ItemArrowType
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTitle
 import com.moriafly.salt.ui.RoundedColumn
@@ -122,24 +114,12 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
     val dynamicColor by SettingsPreferences.dynamicColor.collectAsState(false)
     val themeMode by SettingsPreferences.themeMode.collectAsState(SettingsPreferences.ThemeMode.SYSTEM)
     val scope = rememberCoroutineScope()
-    var downloadDialogVisible by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf(false) }
 
     var isHttpServerRunning by remember { mutableStateOf(HttpServer.isRunning()) }
     var serverIp by remember { mutableStateOf(HttpServer.getIpAddress()) }
-
-    val settingList = listOf(
-        SettingsBean(
-            R.string.random_walk,
-            Icons.Outlined.Explore
-        ) { navController.navigate(Screen.RandomWalk) },
-        SettingsBean(
-            R.string.gallery,
-            Icons.Outlined.Photo
-        ) { navController.navigate(Screen.Gallery) },
-    )
 
     LoadingComponent(
         isLoading = isLoading,
@@ -258,23 +238,6 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                         text = R.string.local_data_manager.str,
                         iconPainter = rememberVectorPainter(ImageVector.vectorResource(R.drawable.ic_database))
                     )
-                    Item(
-                        onClick = {
-                            navController.navigate(Screen.Statistics)
-                        },
-                        text = R.string.statistics.str,
-                        iconPainter = rememberVectorPainter(Icons.Outlined.BarChart)
-                    )
-
-                    settingList.forEachIndexed { index, it ->
-                        Item(
-                            onClick = {
-                                it.onClick()
-                            },
-                            text = it.title.str,
-                            iconPainter = rememberVectorPainter(it.imageVector),
-                        )
-                    }
 
                     Item(
                         onClick = {
@@ -322,7 +285,9 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                     )
                     Item(
                         onClick = {
-                            downloadDialogVisible = true
+                            DonateUtils.openGooglePlay(
+                                context
+                            )
                         },
                         text = R.string.new_version.str,
                         iconPainter = rememberVectorPainter(Icons.Outlined.Download),
@@ -350,12 +315,6 @@ fun SettingsPreferenceScreen(navController: NavHostController) {
                 Spacer(modifier = Modifier.height(120.dp))
             }
         })
-
-    if (downloadDialogVisible) {
-        DownloadsDialog {
-            downloadDialogVisible = false
-        }
-    }
 }
 
 @Composable
@@ -408,44 +367,4 @@ private fun StatItem(label: String, value: String, modifier: Modifier = Modifier
             )
         )
     }
-}
-
-
-@Composable
-fun DownloadsDialog(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    AlertDialog(
-        containerColor = SaltTheme.colors.background,
-        onDismissRequest = { onDismiss() },
-        title = { Text(stringResource(R.string.new_version), color = SaltTheme.colors.text) },
-        text = {
-            Column {
-                Item(
-                    onClick = {
-                        Constant.startGithubReleaseUrl(context)
-                        onDismiss()
-                    },
-                    text = R.string.github.str,
-                    arrowType = ItemArrowType.Arrow
-                )
-                Item(
-                    onClick = {
-                        DonateUtils.openGooglePlay(
-                            context
-                        )
-                        onDismiss()
-                    },
-                    text = "Google Play",
-                    arrowType = ItemArrowType.Arrow
-                )
-            }
-        },
-        confirmButton = {
-            Button(onClick = {
-                onDismiss()
-            }) {
-                com.moriafly.salt.ui.Text(R.string.cancel.str, color = Color.White)
-            }
-        }
-    )
 }
